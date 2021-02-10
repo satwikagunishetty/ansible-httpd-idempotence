@@ -1,0 +1,44 @@
+- hosts: httpd
+  vars_prompt:
+  - name: "doc_root"
+    prompt: "Enter document root name"
+    private: no
+  
+  - name: "http_port"
+    prompt: "Enter port no"
+    private: no
+
+  tasks:
+  - name: "Installing httpd package"
+    package:
+      name: "httpd"
+      state: present
+ 
+  - name: copying the configuration    
+    template:
+      dest: "/etc/httpd/conf.d/web.conf"
+      src: "web.conf"
+    notify: webservices   
+ 
+ - name: "copying the configuration"
+    copy:
+      dest: "{{ doc_root }}/"
+      content: "Hi hello"
+
+  - name: start httpd service
+    service:
+      name: "httpd"
+      state: started
+      enabled: yes
+
+  - firewalld:
+      port: "{{http_port}}/tcp"
+      state: enabled
+      permanent: yes
+      immediate: yes
+
+  handlers:    
+  - name: webservices
+    service:
+       name: "httpd"
+       state: restarted
